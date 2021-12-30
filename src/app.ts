@@ -36,8 +36,8 @@ const typeDefs = gql`
 `;
 
 const clients: Array<Object> = [
-  { fullName: "Merlin Counting Stars", tin: "12345" },
-  { fullName: "Rythem n Blues", tin: "9876" },
+  { fullName: "Merlin Counting Stars", secretField: "12345" },
+  { fullName: "Rythem n Blues", secretField: "9876" },
 ];
 
 const secrets = [
