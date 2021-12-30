@@ -4,7 +4,15 @@
   "main": "index.js",
   "author": "Cassidy Scheffer <cscheffer@wealthsimple.com>",
   "license": "MIT",
+  "scripts": {
+    "build": "yarn tsc",
+    "serve": "yarn build && node dist/app.js"
+  },
   "dependencies": {
+    "@graphql-tools/delegate": "^8.4.3",
+    "@graphql-tools/schema": "^8.3.1",
+    "@graphql-tools/utils": "^8.5.5",
+    "@graphql-tools/wrap": "^8.3.2",
     "apollo-server": "^3.5.0",
     "graphql": "^16.2.0",
     "typescript": "^4.5.4"
