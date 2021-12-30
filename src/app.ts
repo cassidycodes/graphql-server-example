@@ -15,6 +15,8 @@ import {
   FilterInterfaceFields,
 } from "@graphql-tools/wrap";
 
+const isPublic: boolean = process.env.PUBLIC_DEPLOYMENT == 'true';
+
 const typeDefs = gql`
   directive @internal on OBJECT | FIELD_DEFINITION
 
@@ -50,8 +52,6 @@ const resolvers = {
     secretThings: () => secrets,
   },
 };
-
-const isPublic: boolean = true;
 
 const transforms: Array<Transform> = [
   new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
