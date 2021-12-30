@@ -11,20 +11,22 @@ import {
 } from '@graphql-tools/wrap';
 
 const typeDefs = gql`
-  directive @internal on SCHEMA | SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | INTERFACE | UNION | ENUM | ENUM_VALUE | INPUT_OBJECT | INPUT_FIELD_DEFINITION
+  directive @internal on
+    | OBJECT
+    | FIELD_DEFINITION
 
   type Client {
     fullName: String
-    tin: String @internal
+    secretField: String @internal
   }
 
-  type Secret @internal {
+  type SecretThing @internal {
     shhh: String
   }
 
   type Query {
     clients: [Client]
-    secrets: [Secret] @internal
+    secretThings: [SecretThing] @internal
   }
 `;
 
@@ -33,7 +35,7 @@ const clients: Array<Object>= [
     fullName: 'Merlin Counting Stars',
     tin: '12345',
   },
-  { fullName: 'Blue',
+  { fullName: 'Rythem n Blues',
     tin: '9876',
   }
 ];
@@ -47,22 +49,40 @@ const secrets = [
 const resolvers = {
   Query: {
     clients: () => clients,
-    secrets: () => secrets,
+    secretThings: () => secrets,
   },
 };
 
 
+const isPublic: boolean = true;
 
 const transforms: Array<Transform> = [
-  new FilterObjectFields((_operationName, _fieldName, fieldConfig) => {
-    const directiveName = getDirective(schema, fieldConfig, 'internal')?.[0];
-    return !directiveName
+  new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
+    const isInternal = getDirective(schema, fieldConfig, 'internal')?.[0];
+    if (isPublic) {
+      return !isInternal
+    } else {
+      return true
+    };
   }),
 
-  new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
-    const directiveName = getDirective(schema, fieldConfig, 'internal')?.[0];
-    return !directiveName
-  })
+  new FilterObjectFields((_operationName, _fieldName, fieldConfig) => {
+    const isInternal = getDirective(schema, fieldConfig, 'internal')?.[0];
+    if (isPublic) {
+      return !isInternal
+    } else {
+      return true
+    };
+  }),
+
+  new FilterTypes((graphQLNamedType) => {
+    const isInternal = getDirective(schema, graphQLNamedType, 'internal')?.[0];
+    if (isPublic) {
+      return !isInternal
+    } else {
+      return true
+    };
+  }),
 
 ];
 
@@ -76,5 +96,5 @@ schema = wrapSchema({ schema, transforms })
 const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
-  console.log(` Server ready at ${ url }`);
+  console.log(`😎 Server ready at ${ url }`);
 });
