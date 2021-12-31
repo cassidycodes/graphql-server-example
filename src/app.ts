@@ -15,70 +15,71 @@ import {
   FilterInterfaceFields,
 } from "@graphql-tools/wrap";
 
-const isPublic: boolean = process.env.PUBLIC_DEPLOYMENT == 'true';
+const isPrivateMode: boolean = process.env.PRIVATE_DEPLOYMENT == "true";
+
+console.log(
+  `Server is running in ${isPrivateMode ? "😎 private" : "🙂 public"} mode`
+);
 
 const typeDefs = gql`
-  directive @internal on OBJECT | FIELD_DEFINITION
+  directive @private on OBJECT | FIELD_DEFINITION | ENUM
+  directive @public on OBJECT | FIELD_DEFINITION | ENUM
 
-  type Client {
+  type Client @public {
     fullName: String
-    secretField: String @internal
+    secretField: String @private
   }
 
-  type SecretThing @internal {
+  enum SecretEnum @private {
+    ONE
+    TWO
+    THREE
+  }
+
+  type SecretThing @private {
     shhh: String
   }
 
-  type Query {
+  type Query @public {
     clients: [Client]
-    secretThings: [SecretThing] @internal
+    secretThings: [SecretThing] @private
   }
 `;
 
-const clients: Array<Object> = [
-  { fullName: "Merlin Counting Stars", secretField: "12345" },
-  { fullName: "Rythem n Blues", secretField: "9876" },
-];
-
-const secrets = [
-  {
-    shhh: "nothing to see here",
-  },
-];
-
 const resolvers = {
   Query: {
-    clients: () => clients,
-    secretThings: () => secrets,
+    clients: () => [
+      { fullName: "Merlin Counting Stars", secretField: "12345" },
+      { fullName: "Rythem n Blues", secretField: "9876" },
+    ],
+
+    secretThings: () => [
+      {
+        shhh: "nothing to see here",
+      },
+    ],
   },
 };
 
 const transforms: Array<Transform> = [
   new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
-    const isInternal = getDirective(schema, fieldConfig, "internal")?.[0];
-    if (isPublic) {
-      return !isInternal;
-    } else {
-      return true;
-    }
+    const isFieldPrivate = getDirective(schema, fieldConfig, "private")?.[0];
+    return isPrivateMode || !isFieldPrivate;
   }),
 
   new FilterObjectFields((_operationName, _fieldName, fieldConfig) => {
-    const isInternal = getDirective(schema, fieldConfig, "internal")?.[0];
-    if (isPublic) {
-      return !isInternal;
-    } else {
-      return true;
-    }
+    const isFieldPrivate = getDirective(schema, fieldConfig, "private")?.[0];
+    return isPrivateMode || !isFieldPrivate;
   }),
 
   new FilterTypes((graphQLNamedType) => {
-    const isInternal = getDirective(schema, graphQLNamedType, "internal")?.[0];
-    if (isPublic) {
-      return !isInternal;
-    } else {
-      return true;
-    }
+    const isTypePrivate = getDirective(
+      schema,
+      graphQLNamedType,
+      "private"
+    )?.[0];
+
+    return isPrivateMode || !isTypePrivate;
   }),
 ];
 
@@ -92,5 +93,5 @@ schema = wrapSchema({ schema, transforms });
 const server = new ApolloServer({ schema });
 
 server.listen().then(({ url }) => {
-  console.log(`😎 Server ready at ${url}`);
+  console.log(`🚀 Server ready at ${url}`);
 });
