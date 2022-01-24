@@ -15,34 +15,34 @@ import {
   FilterInterfaceFields,
 } from "@graphql-tools/wrap";
 
-const isPrivateMode: boolean = process.env.PRIVATE_DEPLOYMENT == "true";
+const isPublicMode: boolean = process.env.PUBLIC_DEPLOYMENT == "true";
 
 console.log(
-  `Server is running in ${isPrivateMode ? "😎 private" : "🙂 public"} mode`
+  `Server is running in ${isPublicMode ? "🙂 public" : "😎 private"} mode`
 );
 
 const typeDefs = gql`
-  directive @private on OBJECT | FIELD_DEFINITION | ENUM
   directive @public on OBJECT | FIELD_DEFINITION | ENUM
+  directive @private on OBJECT | FIELD_DEFINITION | ENUM
 
   type Client @public {
-    fullName: String
-    secretField: String @private
+    fullName: String @public
+    secretField: String
   }
 
-  enum SecretEnum @private {
+  enum SecretEnum {
     ONE
     TWO
     THREE
   }
 
-  type SecretThing @private {
-    shhh: String
+  type SecretThing {
+    shhh: String @public
   }
 
   type Query @public {
-    clients: [Client]
-    secretThings: [SecretThing] @private
+    clients: [Client] @public
+    secretThings: [SecretThing]
   }
 `;
 
@@ -62,25 +62,24 @@ const resolvers = {
 };
 
 const transforms: Array<Transform> = [
-  new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
-    const isFieldPrivate = getDirective(schema, fieldConfig, "private")?.[0];
-    return isPrivateMode || !isFieldPrivate;
-  }),
-
   new FilterObjectFields((_operationName, _fieldName, fieldConfig) => {
-    const isFieldPrivate = getDirective(schema, fieldConfig, "private")?.[0];
-    return isPrivateMode || !isFieldPrivate;
+    const isFieldPublic = getDirective(schema, fieldConfig, "public")?.[0];
+    console.log(isFieldPublic);
+    return !!isFieldPublic;
+    // return !isFieldPublic || isPublicMode;
   }),
 
-  new FilterTypes((graphQLNamedType) => {
-    const isTypePrivate = getDirective(
-      schema,
-      graphQLNamedType,
-      "private"
-    )?.[0];
+  // new FilterTypes((graphQLNamedType) => {
+  //   const isTypePublic = getDirective(schema, graphQLNamedType, "public")?.[0];
+  //   return false;
+  //   // return isPublicMode || !!isTypePublic;
+  // }),
 
-    return isPrivateMode || !isTypePrivate;
-  }),
+  // new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
+  //   const isFieldPublic = getDirective(schema, fieldConfig, "public")?.[0];
+  //   return false;
+  //   // return !isFieldPublic || isPublicMode;
+  // }),
 ];
 
 let schema = makeExecutableSchema({
