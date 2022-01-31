@@ -15,10 +15,10 @@ import {
   FilterInterfaceFields,
 } from "@graphql-tools/wrap";
 
-const isPublicMode: boolean = process.env.PUBLIC_DEPLOYMENT == "true";
+const isPrivate: boolean = process.env.PRIVATE_DEPLOYMENT == "true";
 
 console.log(
-  `Server is running in ${isPublicMode ? "🙂 public" : "😎 private"} mode`
+  `Server is running in ${isPrivate ? "😎 private" : "🙂 public"} mode`
 );
 
 const typeDefs = gql`
@@ -66,19 +66,19 @@ const transforms: Array<Transform> = [
     const isFieldPublic = getDirective(schema, fieldConfig, "public")?.[0];
     console.log(isFieldPublic);
     return !!isFieldPublic;
-    // return !isFieldPublic || isPublicMode;
+    // return !isFieldPublic || isPrivate;
   }),
 
   // new FilterTypes((graphQLNamedType) => {
   //   const isTypePublic = getDirective(schema, graphQLNamedType, "public")?.[0];
   //   return false;
-  //   // return isPublicMode || !!isTypePublic;
+  //   // return isPrivate || !!isTypePublic;
   // }),
 
   // new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
   //   const isFieldPublic = getDirective(schema, fieldConfig, "public")?.[0];
   //   return false;
-  //   // return !isFieldPublic || isPublicMode;
+  //   // return !isFieldPublic || isPrivate;
   // }),
 ];
 
