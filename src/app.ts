@@ -61,18 +61,24 @@ const resolvers = {
   },
 };
 
+const basicGraphQLTypes = ["String", "Boolean", "Query"];
+
 const transforms: Array<Transform> = [
+  // NOTE: THIS WORKS!
   new FilterObjectFields((_operationName, _fieldName, fieldConfig) => {
     const isFieldPublic = getDirective(schema, fieldConfig, "public")?.[0];
     console.log(`${_fieldName} isPublic ${!!isFieldPublic}`);
     return !!isFieldPublic || isPrivateMode;
   }),
 
-  // new FilterTypes((graphQLNamedType) => {
-  //   const isTypePublic = getDirective(schema, graphQLNamedType, "public")?.[0];
-  //   return false;
-  //   // return isPrivateMode || !!isTypePublic;
-  // }),
+  new FilterTypes((graphQLNamedType) => {
+    const isTypePublic = getDirective(schema, graphQLNamedType, "public")?.[0];
+    console.log(`${graphQLNamedType.name} isPublic ${!!isTypePublic}`);
+    if (basicGraphQLTypes.includes(graphQLNamedType.name)) {
+      return true;
+    }
+    return !!isTypePublic || isPrivateMode;
+  }),
 
   // new FilterRootFields((_operationName, _fieldName, fieldConfig) => {
   //   const isFieldPublic = getDirective(schema, fieldConfig, "public")?.[0];
